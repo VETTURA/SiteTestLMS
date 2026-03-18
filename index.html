@@ -1,49 +1,120 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Проверка ID через iframe</title>
+    <title>Интеграция с LMS</title>
     <style>
-        iframe { width: 100%; height: 600px; border: none; }
+        /* Стили как в первом варианте */
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
+        .error { color: red; }
+        .success { color: green; }
+        button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
         .hidden { display: none; }
+        .lesson-content { margin-top: 30px; padding: 20px; border: 1px solid #ccc; }
     </style>
 </head>
 <body>
-    <h1>Проверка доступа</h1>
+    <h1>Доступ к учебным материалам</h1>
     
-    <!-- Невидимый iframe для загрузки страницы LMS -->
-    <iframe id="lmsFrame" src="https://lms.dvfu.ru" style="display: none;"></iframe>
+    <div id="loginSection">
+        <p>Для доступа к материалам необходимо подтвердить вашу личность в LMS ДВФУ</p>
+        <button onclick="verifyAccess()">Подтвердить доступ</button>
+    </div>
     
-    <div id="accessMessage">Проверка доступа...</div>
+    <div id="result"></div>
+    <div id="lessonContent" class="lesson-content hidden"></div>
 
     <script>
-    const iframe = document.getElementById('lmsFrame');
+    // URL вашего Google Apps Script веб-приложения
+    const PROXY_URL = 'https://script.google.com/macros/s/ВАШ_SCRIPT_ID/exec';
     
-    console.log(iframe)
-
-    iframe.onload = function() {
+    // Функция для получения cookies
+    function getCookies() {
+        return document.cookie;
+    }
+    
+    async function verifyAccess() {
+        const resultDiv = document.getElementById('result');
+        const loginSection = document.getElementById('loginSection');
+        const lessonContent = document.getElementById('lessonContent');
+        
+        resultDiv.innerHTML = 'Проверка доступа...';
+        
         try {
-            // Пытаемся получить содержимое iframe
-            const iframeContent = iframe.contentDocument || iframe.contentWindow.document;
+            // Получаем текущие cookies
+            const cookies = getCookies();
             
-            // Ищем div с ID
-            const bodyHTML = iframeContent.body.innerHTML;
-            const idMatch = bodyHTML.match(/ID:\s*(\d+)/);
+            // Отправляем запрос через наш прокси
+            const response = await fetch(`${PROXY_URL}?cookies=${encodeURIComponent(cookies)}`);
+            const data = await response.json();
             
-            if (idMatch && idMatch[1]) {
-                const userId = idMatch[1];
-                document.getElementById('accessMessage').innerHTML = '✅ Доступ разрешен! ID: ' + userId;
-                document.getElementById('content').classList.remove('hidden');
+            if (data.status === 200 && data.data.id) {
+                const userData = data.data;
                 
-                // Отправляем ID на ваш сервер для логирования
-                fetch('https://your-logging-server.com/log', {
-                    method: 'POST',
-                    body: JSON.stringify({user_id: userId, timestamp: new Date()})
-                });
+                // Ищем ID в данных
+                const userId = userData.id;
+                
+                // Здесь можно проверить, есть ли ID в вашем списке
+                // const allowedIds = [12345, 67890]; // ваш список разрешенных ID
+                // if (allowedIds.includes(userId)) {
+                
+                resultDiv.innerHTML = `
+                    <div class="success">
+                        ✅ Доступ разрешен!<br>
+                        ID: ${userId}<br>
+                        Имя: ${userData.full_name || 'Не указано'}<br>
+                        Email: ${userData.email || 'Не указан'}
+                    </div>
+                `;
+                
+                // Показываем содержимое урока
+                lessonContent.innerHTML = `
+                    <h2>Материалы курса</h2>
+                    <p>Добро пожаловать, ${userData.full_name || 'студент'}!</p>
+                    <iframe src="https://ваш-курс.teachbase.ru/lesson" 
+                            width="100%" 
+                            height="500px" 
+                            frameborder="0">
+                    </iframe>
+                `;
+                lessonContent.classList.remove('hidden');
+                loginSection.classList.add('hidden');
+                
+                // Сохраняем информацию о доступе
+                localStorage.setItem('access_granted', 'true');
+                localStorage.setItem('user_id', userId);
+                localStorage.setItem('user_name', userData.full_name);
+                
             } else {
-                document.getElementById('accessMessage').innerHTML = '❌ ID не найден. Доступ запрещен.';
+                throw new Error('Не удалось получить ID пользователя');
             }
-        } catch (e) {
-            document.getElementById('accessMessage').innerHTML = '❌ Ошибка доступа к iframe. Возможно, нужно войти в систему.';
+        } catch (error) {
+            resultDiv.innerHTML = `
+                <div class="error">
+                    ❌ Доступ запрещен<br>
+                    <small>Причина: ${error.message}</small><br>
+                    <small>Убедитесь, что вы:</small><br>
+                    • Вошли в систему LMS ДВФУ<br>
+                    • Разрешили использование cookies<br>
+                    • Находитесь в сети ДВФУ
+                </div>
+            `;
+        }
+    }
+    
+    // Проверяем, есть ли уже сохраненный доступ
+    window.onload = function() {
+        if (localStorage.getItem('access_granted') === 'true') {
+            document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('lessonContent').innerHTML = `
+                <h2>Материалы курса</h2>
+                <p>С возвращением, ${localStorage.getItem('user_name') || 'студент'}!</p>
+                <iframe src="https://ваш-курс.teachbase.ru/lesson" 
+                        width="100%" 
+                        height="500px" 
+                        frameborder="0">
+                </iframe>
+            `;
+            document.getElementById('lessonContent').classList.remove('hidden');
         }
     };
     </script>
