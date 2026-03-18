@@ -36,6 +36,8 @@
     function detectUserEmail() {
         // Способ 1: Из URL (если мы сами добавили параметр)
         const urlParams = new URLSearchParams(window.location.search);
+
+        console.log(urlParams)
         const emailParam = urlParams.get('email');
         if (emailParam && emailParam.includes('@')) {
             return emailParam;
