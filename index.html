@@ -8,7 +8,11 @@
 
     <script>
         fetch('https://lms.dvfu.ru/api/v2/members/current', {
-            credentials: 'include'
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+                'Accept': 'application/json'
+            }
         })
         .then(response => response.json())
         .then(data => {
