@@ -1,161 +1,67 @@
-<div id="access-container" style="padding: 20px; text-align: center;">
-    <div id="loading">
-        <div style="border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto;"></div>
-        <p>Проверка доступа...</p>
-    </div>
-    <div id="content" style="display: none;"></div>
+<div id="email-display" style="padding: 20px; border: 2px solid #ccc; border-radius: 5px;">
+    <h3>🔍 Поиск email пользователя...</h3>
+    <div id="result" style="font-size: 18px;"></div>
 </div>
 
-<style>
-@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-.access-allowed { color: green; }
-.access-denied { color: #721c24; background: #f8d7da; padding: 30px; border-radius: 5px; }
-.secret-image { max-width: 100%; border-radius: 8px; margin: 20px 0; }
-</style>
-
 <script>
-(function() {
-    // Белый список email (добавьте свои)
-    const ALLOWED_EMAILS = [
-        'sobolev.dal@dvfu.ru',  // тестовый пользователь
-        'ivanov@dvfu.ru',
-        'petrov@dvfu.ru'
-    ];
+async function findUserEmail() {
+    const resultDiv = document.getElementById('result');
     
-    // Контейнеры
-    const loadingEl = document.getElementById('loading');
-    const contentEl = document.getElementById('content');
-    
-    // Функция получения email через API
-    async function getUserEmail() {
-        try {
-            // Пробуем напрямую запросить /api/v2/members/current
-            const response = await fetch('/api/v2/members/current', {
-                credentials: 'include',  // Важно! Отправляем куки
-                headers: {
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            });
+    // Пробуем получить email через API (как на вашем скриншоте)
+    try {
+        const response = await fetch('/api/v2/members/current', {
+            credentials: 'include',
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            // Пробуем разные пути к email в ответе
+            const email = data.email || data.data?.email || data.user?.email;
             
-            if (response.ok) {
-                const data = await response.json();
-                console.log('Ответ от API:', data);
-                
-                // Извлекаем email из разных возможных форматов
-                if (data.email) return data.email;
-                if (data.data?.email) return data.data.email;
-                if (data.user?.email) return data.user.email;
-            } else {
-                console.log('Статус ответа:', response.status);
-            }
-        } catch (e) {
-            console.log('Ошибка запроса:', e);
-        }
-        
-        // Если прямой запрос не сработал, пробуем найти email на странице
-        return findEmailInPage();
-    }
-    
-    // Запасной вариант: ищем email в DOM
-    function findEmailInPage() {
-        // Поиск по тексту email
-        const bodyText = document.body.innerText;
-        const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
-        const emails = bodyText.match(emailRegex);
-        
-        if (emails && emails.length > 0) {
-            // Обычно первый email в DOM - текущего пользователя
-            return emails[0];
-        }
-        
-        // Поиск по элементам с классами
-        const selectors = [
-            '.user-email',
-            '.profile-email',
-            '[data-email]',
-            '.current-user .email',
-            '.member-email'
-        ];
-        
-        for (const selector of selectors) {
-            const el = document.querySelector(selector);
-            if (el) {
-                const email = el.textContent || el.innerText || el.getAttribute('data-email');
-                if (email && email.includes('@')) {
-                    return email.trim();
-                }
-            }
-        }
-        
-        return null;
-    }
-    
-    // Показываем контент в зависимости от доступа
-    function showContent(email) {
-        loadingEl.style.display = 'none';
-        contentEl.style.display = 'block';
-        
-        const isAllowed = ALLOWED_EMAILS.includes(email.toLowerCase());
-        
-        if (isAllowed) {
-            contentEl.innerHTML = `
-                <div class="access-allowed">
-                    <h2>✅ Доступ разрешен</h2>
-                    <p>Добро пожаловать, ${email}!</p>
-                    <img src="https://via.placeholder.com/800x400?text=Секретный+материал" 
-                         alt="Секретный контент" 
-                         class="secret-image">
-                    <p>Этот материал доступен только авторизованным сотрудникам ДВФУ.</p>
-                </div>
-            `;
-        } else {
-            contentEl.innerHTML = `
-                <div class="access-denied">
-                    <h1>🚫 Доступ закрыт</h1>
-                    <p>Email: <strong>${email}</strong></p>
-                    <p>У вас нет прав для просмотра этого материала.</p>
-                    <p style="margin-top: 20px; font-size: 14px;">
-                        Если вы считаете, что это ошибка, обратитесь к администратору.
+            if (email) {
+                resultDiv.innerHTML = `
+                    <p style="color: green;">✅ Email найден через API:</p>
+                    <p style="font-size: 24px; font-weight: bold; padding: 10px; background: #f0f0f0; border-radius: 5px;">
+                        ${email}
                     </p>
-                </div>
-            `;
+                `;
+                return;
+            }
         }
+    } catch (e) {
+        console.log('API запрос не сработал, ищем в DOM...');
     }
     
-    // Показываем ошибку, если не нашли email
-    function showError() {
-        loadingEl.style.display = 'none';
-        contentEl.style.display = 'block';
-        contentEl.innerHTML = `
-            <div style="background: #fff3cd; border: 1px solid #ffeeba; padding: 20px; border-radius: 5px;">
-                <h3 style="color: #856404;">⚠️ Не удалось определить пользователя</h3>
-                <p>Пожалуйста, убедитесь, что вы авторизованы в системе.</p>
-                <button onclick="location.reload()" style="padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
-                    Обновить страницу
-                </button>
-            </div>
+    // Ищем email в тексте страницы
+    const bodyText = document.body.innerText;
+    const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
+    const emails = bodyText.match(emailRegex);
+    
+    if (emails && emails.length > 0) {
+        resultDiv.innerHTML = `
+            <p style="color: green;">✅ Email найден на странице:</p>
+            <p style="font-size: 24px; font-weight: bold; padding: 10px; background: #f0f0f0; border-radius: 5px;">
+                ${emails[0]}
+            </p>
+            <p style="color: gray; font-size: 12px;">Найдено всего email: ${emails.length}</p>
         `;
+        return;
     }
     
-    // Главная функция
-    async function main() {
-        const email = await getUserEmail();
-        
-        if (email) {
-            console.log('Найден email:', email);
-            showContent(email);
-        } else {
-            console.log('Email не найден');
-            showError();
-        }
-    }
-    
-    // Запускаем после загрузки страницы
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', main);
-    } else {
-        main();
-    }
-})();
+    // Если ничего не нашли
+    resultDiv.innerHTML = `
+        <p style="color: red;">❌ Email не найден</p>
+        <p style="color: gray;">Попробуйте обновить страницу или войти в систему</p>
+    `;
+}
+
+// Запускаем после загрузки страницы
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', findUserEmail);
+} else {
+    findUserEmail();
+}
 </script>
