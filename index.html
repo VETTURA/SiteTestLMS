@@ -1,158 +1,22 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Мои данные из LMS ДВФУ</title>
-    <style>
-        body {
-            font-family: sans-serif;
-            line-height: 1.6;
-            padding: 20px;
-            background-color: #f4f4f4;
-        }
-        .container {
-            max-width: 800px;
-            margin: auto;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        h1 {
-            color: #333;
-            border-bottom: 2px solid #0066b3;
-            padding-bottom: 10px;
-        }
-        button {
-            background-color: #0066b3;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            margin-bottom: 20px;
-        }
-        button:hover {
-            background-color: #004b8f;
-        }
-        button:disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
-        }
-        pre {
-            background-color: #f0f0f0;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            padding: 15px;
-            overflow-x: auto;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-        }
-        .error {
-            color: #d9534f;
-            background-color: #f2dede;
-            border: 1px solid #ebccd1;
-            padding: 15px;
-            border-radius: 5px;
-        }
-        .loading {
-            color: #31708f;
-            background-color: #d9edf7;
-            border: 1px solid #bce8f1;
-            padding: 15px;
-            border-radius: 5px;
-        }
-    </style>
+    <title>LMS API Test</title>
 </head>
 <body>
-    <div class="container">
-        <h1>Информация о текущем пользователе LMS</h1>
-        <button id="fetchDataBtn" onclick="fetchUserData()">Получить данные</button>
-        
-        <div id="resultArea">
-            <p>Нажмите на кнопку, чтобы загрузить данные из API.</p>
-        </div>
-    </div>
+    <pre id="output">Загрузка...</pre>
 
     <script>
-        const apiUrl = 'https://lms.dvfu.ru/api/v2/members/current';
-        const resultArea = document.getElementById('resultArea');
-        const fetchBtn = document.getElementById('fetchDataBtn');
-
-        async function fetchUserData() {
-            // Блокируем кнопку на время запроса и показываем индикатор загрузки
-            fetchBtn.disabled = true;
-            resultArea.innerHTML = '<div class="loading">⏳ Загрузка данных...</div>';
-
-            try {
-                // Выполняем запрос к API с указанием credentials: 'include'
-                // Это необходимо для отправки куки сессии, если API использует их для аутентификации
-                const response = await fetch(apiUrl, {
-                    method: 'GET',
-                    credentials: 'include', // Важно для авторизации!
-                    headers: {
-                        // Иногда API требует явного указания типа контента
-                        'Accept': 'application/json',
-                        // Можно добавить другие заголовки, если это необходимо для API
-                        // 'X-Requested-With': 'XMLHttpRequest'
-                    }
-                });
-
-                if (!response.ok) {
-                    // Если статус ответа не 2xx, выбрасываем ошибку с текстом
-                    let errorText = `HTTP ошибка ${response.status}: ${response.statusText}`;
-                    try {
-                        const errorData = await response.json();
-                        errorText += ` - ${JSON.stringify(errorData)}`;
-                    } catch (e) {
-                        // Если ответ не в JSON, ничего не добавляем
-                    }
-                    throw new Error(errorText);
-                }
-
-                const userData = await response.json();
-
-                // Форматируем JSON для красивого вывода
-                const formattedJson = JSON.stringify(userData, null, 2);
-                
-                // Отображаем успешный результат
-                resultArea.innerHTML = `
-                    <h3>✅ Данные успешно получены:</h3>
-                    <pre>${escapeHtml(formattedJson)}</pre>
-                `;
-
-            } catch (error) {
-                // В случае ошибки показываем её сообщение
-                resultArea.innerHTML = `
-                    <div class="error">
-                        <strong>❌ Ошибка при запросе:</strong> ${escapeHtml(error.message)}
-                        <br><br>
-                        <strong>Возможные причины:</strong>
-                        <ul>
-                            <li>Вы не авторизованы в системе LMS ДВФУ в этом браузере.</li>
-                            <li>API не поддерживает кросс-доменные запросы (CORS) или требует другой способ авторизации.</li>
-                            <li>Ссылка на API могла измениться (обратите внимание на двойной слеш "//" в исходном адресе, в коде он исправлен на один).</li>
-                        </ul>
-                        <p>Попробуйте открыть инструменты разработчика в браузере (F12) → вкладка "Сеть" (Network), чтобы увидеть детали запроса.</p>
-                    </div>
-                `;
-            } finally {
-                // Разблокируем кнопку в любом случае
-                fetchBtn.disabled = false;
-            }
-        }
-
-        // Простая функция для экранирования HTML-спецсимволов в тексте ошибки
-        function escapeHtml(unsafe) {
-            return unsafe
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
-        }
+        fetch('https://lms.dvfu.ru/api/v2/members/current', {
+            credentials: 'include'
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('output').textContent = JSON.stringify(data, null, 2);
+        })
+        .catch(error => {
+            document.getElementById('output').textContent = 'Ошибка: ' + error.message;
+        });
     </script>
 </body>
 </html>
