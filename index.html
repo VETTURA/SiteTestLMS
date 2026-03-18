@@ -1,7 +1,71 @@
-<script>
-console.log('📡 Запрашиваю данные пользователя...');
-fetch('https://lms.dvfu.ru/api/v2//members/current')
-    .then(r => r.json())
-    .then(d => console.log('✅ Данные пользователя:', d))
-    .catch(e => console.error('❌ Ошибка:', e));
-</script>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Получение HTML кода сайта</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #htmlOutput {
+            background-color: #f5f5f5;
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 500px;
+            overflow: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Получение HTML кода сайта</h1>
+    <button onclick="getHtml()">Получить HTML код</button>
+    <div id="htmlOutput">Нажмите кнопку для получения HTML кода...</div>
+
+    <script>
+        async function getHtml() {
+            const outputDiv = document.getElementById('htmlOutput');
+            
+            try {
+                outputDiv.textContent = 'Загрузка...';
+                
+                // Получаем HTML текущей страницы
+                const html = document.documentElement.outerHTML;
+                
+                // Форматируем для отображения (экранируем HTML теги)
+                const escapedHtml = html
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
+                
+                outputDiv.innerHTML = escapedHtml;
+                
+            } catch (error) {
+                outputDiv.textContent = 'Ошибка при получении HTML: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>
