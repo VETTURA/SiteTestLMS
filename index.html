@@ -1,39 +1,7 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>LMS Data</title>
-</head>
-<body>
-    <h1>Данные из LMS:</h1>
-    <pre id="output">Ожидание данных...</pre>
-    
-    <!-- Невидимый iframe, который загрузит страницу с LMS -->
-    <iframe id="lmsFrame" src="https://lms.dvfu.ru/api/v2/members/current" 
-            style="display:none" onload="extractData()"></iframe>
-
-    <script>
-        // Слушаем сообщения от iframe
-        window.addEventListener('message', function(event) {
-            if (event.origin === 'https://lms.dvfu.ru') {
-                document.getElementById('output').textContent = 
-                    JSON.stringify(JSON.parse(event.data), null, 2);
-            }
-        });
-
-        // Функция для извлечения данных из iframe
-        function extractData() {
-            const iframe = document.getElementById('lmsFrame');
-            try {
-                const iframeContent = iframe.contentDocument.body.textContent;
-                window.postMessage(iframeContent, '*');
-            } catch(e) {
-                // Если не получается, пробуем другой подход
-                setTimeout(() => {
-                    const data = iframe.contentWindow.document.body.innerText;
-                    document.getElementById('output').textContent = data;
-                }, 1000);
-            }
-        }
-    </script>
-</body>
-</html>
+<script>
+console.log('📡 Запрашиваю данные пользователя...');
+fetch('/api/v2/members/current')
+    .then(r => r.json())
+    .then(d => console.log('✅ Данные пользователя:', d))
+    .catch(e => console.error('❌ Ошибка:', e));
+</script>
