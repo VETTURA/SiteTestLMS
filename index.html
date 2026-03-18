@@ -25,7 +25,7 @@
 
     <script>
     // URL вашего Google Apps Script веб-приложения
-    const PROXY_URL = 'https://script.google.com/macros/s/ВАШ_SCRIPT_ID/exec';
+    const PROXY_URL = 'https://script.google.com/macros/s/AKfycbxBkgjrw6SVuqawrGgjQoLruxqtOKSLCOMON9P02RQBd9prTPl1ayIahBoWq0XlqQ3VTg/exec';
     
     // Функция для получения cookies
     function getCookies() {
@@ -70,7 +70,7 @@
                 lessonContent.innerHTML = `
                     <h2>Материалы курса</h2>
                     <p>Добро пожаловать, ${userData.full_name || 'студент'}!</p>
-                    <iframe src="https://ваш-курс.teachbase.ru/lesson" 
+                    <iframe src="https://lms.dvfu.ru/manager/player/preview/course/263072/section/926485/material/3707133" 
                             width="100%" 
                             height="500px" 
                             frameborder="0">
@@ -108,7 +108,7 @@
             document.getElementById('lessonContent').innerHTML = `
                 <h2>Материалы курса</h2>
                 <p>С возвращением, ${localStorage.getItem('user_name') || 'студент'}!</p>
-                <iframe src="https://ваш-курс.teachbase.ru/lesson" 
+                <iframe src="https://lms.dvfu.ru/manager/player/preview/course/263072/section/926485/material/3707133" 
                         width="100%" 
                         height="500px" 
                         frameborder="0">
