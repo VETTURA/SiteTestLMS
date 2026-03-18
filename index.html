@@ -3,351 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DVFU API Viewer</title>
+    <title>Случайный цвет кнопки</title>
     <style>
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }
-        
-        h1 {
-            color: #0066cc;
-            border-bottom: 2px solid #0066cc;
-            padding-bottom: 10px;
-        }
-        
-        .container {
-            background-color: white;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        
-        .controls {
-            margin-bottom: 20px;
             display: flex;
-            gap: 10px;
+            justify-content: center;
             align-items: center;
-            flex-wrap: wrap;
-        }
-        
-        button {
-            background-color: #0066cc;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: background-color 0.3s;
-        }
-        
-        button:hover {
-            background-color: #0052a3;
-        }
-        
-        button:disabled {
-            background-color: #cccccc;
-            cursor: not-allowed;
-        }
-        
-        .status {
-            padding: 10px;
-            border-radius: 5px;
-            background-color: #e8f4fd;
-            border-left: 4px solid #0066cc;
-            margin-bottom: 20px;
-        }
-        
-        .status.error {
-            background-color: #fee;
-            border-left-color: #cc0000;
-        }
-        
-        .status.success {
-            background-color: #e8f5e9;
-            border-left-color: #4caf50;
-        }
-        
-        pre {
-            background-color: #1e1e1e;
-            color: #d4d4d4;
-            padding: 15px;
-            border-radius: 5px;
-            overflow-x: auto;
-            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-            font-size: 14px;
-            line-height: 1.5;
+            height: 100vh;
             margin: 0;
+            font-family: Arial, sans-serif;
         }
         
-        .copy-btn {
-            background-color: #28a745;
-            margin-left: 10px;
-        }
-        
-        .copy-btn:hover {
-            background-color: #218838;
-        }
-        
-        .url-display {
-            background-color: #f8f9fa;
-            padding: 10px;
-            border-radius: 5px;
-            border: 1px solid #dee2e6;
-            font-family: monospace;
-            word-break: break-all;
-        }
-        
-        .json-key {
-            color: #9cdcfe;
-        }
-        .json-string {
-            color: #ce9178;
-        }
-        .json-number {
-            color: #b5cea8;
-        }
-        .json-boolean {
-            color: #569cd6;
-        }
-        .json-null {
-            color: #569cd6;
-        }
-        
-        .cookies-info {
-            margin-top: 20px;
-            padding: 15px;
-            background-color: #f8f9fa;
-            border-radius: 5px;
-            border: 1px solid #dee2e6;
-            font-size: 14px;
-        }
-        
-        .cookies-info summary {
+        #colorButton {
+            padding: 15px 30px;
+            font-size: 18px;
+            border: none;
+            border-radius: 8px;
             cursor: pointer;
-            color: #0066cc;
-            font-weight: 500;
-        }
-        
-        .cookie-item {
-            margin: 5px 0;
-            font-family: monospace;
-            word-break: break-all;
+            transition: background-color 0.3s ease;
+            background-color: #007bff;
+            color: white;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
-    <h1>📡 DVFU API Response Viewer</h1>
-    
-    <div class="container">
-        <div class="controls">
-            <button id="fetchBtn">🔄 Получить данные</button>
-            <button id="copyBtn" class="copy-btn" disabled>📋 Копировать JSON</button>
-        </div>
-        
-        <div class="url-display">
-            <strong>API URL:</strong> https://lms.dvfu.ru/api/v2//members/current
-        </div>
-        
-        <div id="status" class="status">
-            Нажмите кнопку "Получить данные" для загрузки информации
-        </div>
-        
-        <div style="position: relative;">
-            <pre id="jsonOutput">{
-  "status": "ожидание запроса..."
-}</pre>
-        </div>
-        
-        <details class="cookies-info">
-            <summary>🔐 Информация о cookie (используются в запросе)</summary>
-            <div id="cookiesList">
-                <p>Cookie будут отображены после выполнения запроса</p>
-            </div>
-            <p style="margin-top: 10px; color: #666;">
-                <small>⚠️ Все cookie из вашего браузера автоматически передаются в запросе</small>
-            </p>
-        </details>
-    </div>
+    <button id="colorButton" onclick="changeColor()">Нажми меня!</button>
 
     <script>
-        const API_URL = 'https://lms.dvfu.ru/api/v2//members/current';
-        const fetchBtn = document.getElementById('fetchBtn');
-        const copyBtn = document.getElementById('copyBtn');
-        const statusDiv = document.getElementById('status');
-        const jsonOutput = document.getElementById('jsonOutput');
-        const cookiesList = document.getElementById('cookiesList');
-        
-        let lastResponse = null;
-
-        // Функция для форматирования JSON с подсветкой синтаксиса
-        function syntaxHighlight(json) {
-            if (typeof json !== 'string') {
-                json = JSON.stringify(json, null, 2);
+        function getRandomColor() {
+            const letters = '0123456789ABCDEF';
+            let color = '#';
+            for (let i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
             }
-            
-            json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-            
-            return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function(match) {
-                let cls = 'json-number';
-                if (/^"/.test(match)) {
-                    if (/:$/.test(match)) {
-                        cls = 'json-key';
-                        match = match.replace(/"/g, '');
-                    } else {
-                        cls = 'json-string';
-                    }
-                } else if (/true|false/.test(match)) {
-                    cls = 'json-boolean';
-                } else if (/null/.test(match)) {
-                    cls = 'json-null';
-                }
-                return '<span class="' + cls + '">' + match + '</span>';
-            });
+            return color;
         }
 
-        // Функция для отображения cookie
-        function displayCookies() {
-            const cookies = document.cookie.split(';').filter(cookie => cookie.trim() !== '');
-            
-            if (cookies.length === 0) {
-                cookiesList.innerHTML = '<p class="cookie-item">Нет доступных cookie</p>';
-                return;
-            }
-            
-            let html = '';
-            cookies.forEach(cookie => {
-                const [name, ...valueParts] = cookie.trim().split('=');
-                const value = valueParts.join('=');
-                
-                // Сокращаем длинные значения для лучшего отображения
-                let displayValue = value;
-                if (value.length > 100) {
-                    displayValue = value.substring(0, 100) + '...';
-                }
-                
-                html += `<div class="cookie-item"><strong>${name}:</strong> ${displayValue}</div>`;
-            });
-            
-            cookiesList.innerHTML = html;
+        function getContrastColor(hexColor) {
+            const hex = hexColor.replace('#', '');
+            const r = parseInt(hex.substr(0, 2), 16);
+            const g = parseInt(hex.substr(2, 2), 16);
+            const b = parseInt(hex.substr(4, 2), 16);
+            const brightness = (r * 0.299 + g * 0.587 + b * 0.114);
+            return brightness > 186 ? '#000000' : '#FFFFFF';
         }
 
-        // Функция для выполнения запроса
-        async function fetchData() {
-            fetchBtn.disabled = true;
-            statusDiv.textContent = '⏳ Выполняется запрос к API...';
-            statusDiv.className = 'status';
-            
-            try {
-                // Получаем все cookie из браузера
-                const cookies = document.cookie;
-                
-                console.log('Отправка запроса к:', API_URL);
-                console.log('Cookie:', cookies);
-                
-                // Выполняем запрос
-                const response = await fetch(API_URL, {
-                    method: 'GET',
-                    credentials: 'include', // Важно: включает передачу cookie
-                    headers: {
-                        'Accept': 'application/json',
-                        'Accept-Language': 'ru,en;q=0.9',
-                        'Cache-Control': 'max-age=0',
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-                    }
-                });
-                
-                console.log('Статус ответа:', response.status);
-                console.log('Заголовки ответа:', response.headers);
-                
-                // Проверяем статус ответа
-                if (!response.ok) {
-                    throw new Error(`HTTP ошибка! Статус: ${response.status} ${response.statusText}`);
-                }
-                
-                // Получаем данные
-                const data = await response.json();
-                lastResponse = data;
-                
-                // Форматируем и отображаем JSON с подсветкой
-                const formattedJson = JSON.stringify(data, null, 2);
-                jsonOutput.innerHTML = syntaxHighlight(formattedJson);
-                
-                // Обновляем статус
-                statusDiv.textContent = `✅ Успешно получены данные! Статус: ${response.status}`;
-                statusDiv.className = 'status success';
-                
-                // Активируем кнопку копирования
-                copyBtn.disabled = false;
-                
-                // Обновляем информацию о cookie
-                displayCookies();
-                
-            } catch (error) {
-                console.error('Ошибка запроса:', error);
-                
-                // Отображаем ошибку
-                statusDiv.textContent = `❌ Ошибка: ${error.message}`;
-                statusDiv.className = 'status error';
-                
-                jsonOutput.innerHTML = syntaxHighlight({
-                    error: error.message,
-                    timestamp: new Date().toISOString(),
-                    hint: 'Проверьте консоль браузера для деталей (F12)'
-                });
-                
-                copyBtn.disabled = true;
-            } finally {
-                fetchBtn.disabled = false;
-            }
+        function changeColor() {
+            const button = document.getElementById('colorButton');
+            const randomColor = getRandomColor();
+            button.style.backgroundColor = randomColor;
+            button.style.color = getContrastColor(randomColor);
         }
-
-        // Функция копирования JSON в буфер обмена
-        async function copyJson() {
-            if (!lastResponse) return;
-            
-            try {
-                const jsonString = JSON.stringify(lastResponse, null, 2);
-                await navigator.clipboard.writeText(jsonString);
-                
-                const originalText = copyBtn.textContent;
-                copyBtn.textContent = '✅ Скопировано!';
-                copyBtn.style.backgroundColor = '#28a745';
-                
-                setTimeout(() => {
-                    copyBtn.textContent = originalText;
-                    copyBtn.style.backgroundColor = '';
-                }, 2000);
-                
-            } catch (err) {
-                console.error('Ошибка копирования:', err);
-                alert('Не удалось скопировать в буфер обмена');
-            }
-        }
-
-        // Обработчики событий
-        fetchBtn.addEventListener('click', fetchData);
-        copyBtn.addEventListener('click', copyJson);
-
-        // Инициализация: показываем текущие cookie
-        displayCookies();
-
-        // Дополнительно: добавляем обработку ошибок CORS
-        window.addEventListener('load', () => {
-            console.log('Страница загружена, API URL:', API_URL);
-            
-            // Проверяем наличие cookie
-            if (document.cookie === '') {
-                statusDiv.textContent = '⚠️ Внимание: в браузере нет cookie. Возможно, вам нужно сначала авторизоваться на lms.dvfu.ru';
-                statusDiv.className = 'status';
-            }
-        });
     </script>
 </body>
 </html>
