@@ -1,71 +1,51 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Получение HTML кода сайта</title>
+    <title>Проверка ID через iframe</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-bottom: 20px;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-        #htmlOutput {
-            background-color: #f5f5f5;
-            border: 1px solid #ddd;
-            padding: 15px;
-            border-radius: 4px;
-            font-family: monospace;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            max-height: 500px;
-            overflow: auto;
-        }
+        iframe { width: 100%; height: 600px; border: none; }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
-    <h1>Получение HTML кода сайта</h1>
-    <button onclick="getHtml()">Получить HTML код</button>
-    <div id="htmlOutput">Нажмите кнопку для получения HTML кода...</div>
+    <h1>Проверка доступа</h1>
+    
+    <!-- Невидимый iframe для загрузки страницы LMS -->
+    <iframe id="lmsFrame" src="https://lms.dvfu.ru" style="display: none;"></iframe>
+    
+    <div id="accessMessage">Проверка доступа...</div>
 
     <script>
-        async function getHtml() {
-            const outputDiv = document.getElementById('htmlOutput');
+    const iframe = document.getElementById('lmsFrame');
+    
+    console.log(iframe)
+
+    iframe.onload = function() {
+        try {
+            // Пытаемся получить содержимое iframe
+            const iframeContent = iframe.contentDocument || iframe.contentWindow.document;
             
-            try {
-                outputDiv.textContent = 'Загрузка...';
+            // Ищем div с ID
+            const bodyHTML = iframeContent.body.innerHTML;
+            const idMatch = bodyHTML.match(/ID:\s*(\d+)/);
+            
+            if (idMatch && idMatch[1]) {
+                const userId = idMatch[1];
+                document.getElementById('accessMessage').innerHTML = '✅ Доступ разрешен! ID: ' + userId;
+                document.getElementById('content').classList.remove('hidden');
                 
-                // Получаем HTML текущей страницы
-                const html = document.documentElement.outerHTML;
-                
-                // Форматируем для отображения (экранируем HTML теги)
-                const escapedHtml = html
-                    .replace(/&/g, '&amp;')
-                    .replace(/</g, '&lt;')
-                    .replace(/>/g, '&gt;')
-                    .replace(/"/g, '&quot;')
-                    .replace(/'/g, '&#039;');
-                
-                outputDiv.innerHTML = escapedHtml;
-                
-            } catch (error) {
-                outputDiv.textContent = 'Ошибка при получении HTML: ' + error.message;
+                // Отправляем ID на ваш сервер для логирования
+                fetch('https://your-logging-server.com/log', {
+                    method: 'POST',
+                    body: JSON.stringify({user_id: userId, timestamp: new Date()})
+                });
+            } else {
+                document.getElementById('accessMessage').innerHTML = '❌ ID не найден. Доступ запрещен.';
             }
+        } catch (e) {
+            document.getElementById('accessMessage').innerHTML = '❌ Ошибка доступа к iframe. Возможно, нужно войти в систему.';
         }
+    };
     </script>
 </body>
 </html>
