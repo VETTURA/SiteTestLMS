@@ -1,59 +1,38 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Случайный цвет кнопки</title>
-    <style>
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            font-family: Arial, sans-serif;
-        }
-        
-        #colorButton {
-            padding: 15px 30px;
-            font-size: 18px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-            background-color: #007bff;
-            color: white;
-            font-weight: bold;
-        }
-    </style>
+    <title>LMS Data</title>
 </head>
 <body>
-    <button id="colorButton" onclick="changeColor()">Нажми меня!</button>
+    <h1>Данные из LMS:</h1>
+    <pre id="output">Ожидание данных...</pre>
+    
+    <!-- Невидимый iframe, который загрузит страницу с LMS -->
+    <iframe id="lmsFrame" src="https://lms.dvfu.ru/api/v2/members/current" 
+            style="display:none" onload="extractData()"></iframe>
 
     <script>
-        function getRandomColor() {
-            const letters = '0123456789ABCDEF';
-            let color = '#';
-            for (let i = 0; i < 6; i++) {
-                color += letters[Math.floor(Math.random() * 16)];
+        // Слушаем сообщения от iframe
+        window.addEventListener('message', function(event) {
+            if (event.origin === 'https://lms.dvfu.ru') {
+                document.getElementById('output').textContent = 
+                    JSON.stringify(JSON.parse(event.data), null, 2);
             }
-            return color;
-        }
+        });
 
-        function getContrastColor(hexColor) {
-            const hex = hexColor.replace('#', '');
-            const r = parseInt(hex.substr(0, 2), 16);
-            const g = parseInt(hex.substr(2, 2), 16);
-            const b = parseInt(hex.substr(4, 2), 16);
-            const brightness = (r * 0.299 + g * 0.587 + b * 0.114);
-            return brightness > 186 ? '#000000' : '#FFFFFF';
-        }
-
-        function changeColor() {
-            const button = document.getElementById('colorButton');
-            const randomColor = getRandomColor();
-            button.style.backgroundColor = randomColor;
-            button.style.color = getContrastColor(randomColor);
+        // Функция для извлечения данных из iframe
+        function extractData() {
+            const iframe = document.getElementById('lmsFrame');
+            try {
+                const iframeContent = iframe.contentDocument.body.textContent;
+                window.postMessage(iframeContent, '*');
+            } catch(e) {
+                // Если не получается, пробуем другой подход
+                setTimeout(() => {
+                    const data = iframe.contentWindow.document.body.innerText;
+                    document.getElementById('output').textContent = data;
+                }, 1000);
+            }
         }
     </script>
 </body>
